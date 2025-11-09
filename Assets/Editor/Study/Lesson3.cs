@@ -166,7 +166,12 @@ namespace Editor.Study
             
 
             #endregion
-
+            //used to check event sent from other windows
+            if (Event.current.type == EventType.ExecuteCommand)
+            {
+                if(Event.current.commandName == "TestEventBetweenWindows")
+                    Debug.Log("event execute");
+            }
         }
         
         [MenuItem("EditorExtend/Lesson3/ShowWindows")]

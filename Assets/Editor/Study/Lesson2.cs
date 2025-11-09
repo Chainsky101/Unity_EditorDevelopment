@@ -32,7 +32,7 @@ namespace Editor.Study
         //execute every frame
         private void OnGUI()
         {
-            
+            EditorGUI.LabelField(new Rect(0,100,50,30), "test");
         }
 
         private void OnEnable()
