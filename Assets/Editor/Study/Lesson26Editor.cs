@@ -62,19 +62,37 @@ namespace Editor.Study
 
             #region Show GUI in the scene
 
-            Handles.BeginGUI();
-            float w = SceneView.currentDrawingSceneView.position.width;
-            float h = SceneView.currentDrawingSceneView.position.height;
-            GUILayout.BeginArea(new Rect(w-100,h-100,100,100));
-            GUILayout.Label("GUI in scene test");
-            if (GUILayout.Button("skill"))
-            {
-                GameObject obj = Selection.activeGameObject;
-                var player = obj.GetComponent<Lesson26>();
-                player.Attack();
-            }
-            GUILayout.EndArea();
-            Handles.EndGUI();
+            // Handles.BeginGUI();
+            // float w = SceneView.currentDrawingSceneView.position.width;
+            // float h = SceneView.currentDrawingSceneView.position.height;
+            // GUILayout.BeginArea(new Rect(w-100,h-100,100,100));
+            // GUILayout.Label("GUI in scene test");
+            // if (GUILayout.Button("skill"))
+            // {
+            //     GameObject obj = Selection.activeGameObject;
+            //     var player = obj.GetComponent<Lesson26>();
+            //     player.Attack();
+            // }
+            // GUILayout.EndArea();
+            // Handles.EndGUI();
+            #endregion
+
+
+            #region HandleUtility
+
+            float dis = HandleUtility.DistanceToLine(Vector3.zero, Vector3.right);
+            // Debug.Log(dis);
+
+            Vector2 winPos = HandleUtility.WorldToGUIPoint(obj.transform.position);
+            // Debug.Log(winPos);
+
+            // RaycastHit hitInfo;
+            // if(Physics.Raycast(HandleUtility.GUIPointToWorldRay(Event.current.mousePosition),out hitInfo))
+            //     Debug.Log(hitInfo.collider.name);
+
+            GameObject o = HandleUtility.PickGameObject(Event.current.mousePosition, true);
+            if(o is not null)
+                Debug.Log("Pick gameObject:"+o.name);
             #endregion
         }
     }
