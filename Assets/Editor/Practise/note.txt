@@ -1,0 +1,1 @@
+*number*: it means that one need to be repelaced by code generated depending on the GameObject. '*' in the entry can be replaced by any symbol you want. It's a customized choice. 

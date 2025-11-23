@@ -1,0 +1,25 @@
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace UI
+{
+    public class *0*Base : MonoBehaviour
+    {
+        //first Part: declare UI field
+*1*
+        
+        
+        protected virtual void Start()
+        {
+            //second Part: binding UI field with its corresponding component
+*2*
+            
+            //third Part: add invoked event for specular UI control
+*3*
+        }
+
+        //fourth Part: write invoked function
+*4*
+    }
+}
