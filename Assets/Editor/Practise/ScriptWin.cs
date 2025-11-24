@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using TMPro;
@@ -12,6 +13,13 @@ namespace Editor.Practise
 {
     public class ScriptWin : EditorWindow
     {
+        //会跳过控件绑定的控件名
+        private List<string> defaultName = new List<string>()
+            { "Image", "Text (TMP)", "Background", "Checkmark", 
+                "Label","Fill","Handle","Arrow","Text","Placeholder",
+                "Text (Legacy)","Viewport","Scrollbar Vertical"};
+        //record binding object name and type
+        private Dictionary<string, Type> notebook = new Dictionary<string, Type>();
         private string templatePath = Application.dataPath + "/Editor/Practise/";
         private string path = "Assets/Scripts";
         private GameObject obj;
@@ -26,15 +34,16 @@ namespace Editor.Practise
         private Vector2 loc = Vector2.zero;
         private void OnGUI()
         {
+            if(obj is null)
+                return;
+            
             loc = EditorGUILayout.BeginScrollView(loc);
             if (isFirst)
             {
                 isFirst = false;
                 var codeList = GenerateCode();
-                
                 baseCode = EditorGUILayout.TextArea(codeList[0]);
                 deprivedCode = EditorGUILayout.TextArea(codeList[1]);
-                
             }
             else
             {
@@ -94,39 +103,65 @@ namespace Editor.Practise
             sbBlock3 = new StringBuilder("");
             // e. handle block[4]
             sbBlock4 = new StringBuilder("");
-            UIBehaviour[] controls = obj.transform.GetComponentsInChildren<UIBehaviour>();
-            foreach (var control in controls)
-            {
-                string controlName = control.gameObject.name;
-                switch (control)
-                {
-                    case Text:
-                        AddControlWithoutListener("Text",controlName);
-                        break;
-                    case Button:
-                        AddControlWithListener("Button",controlName);
-                        break;
-                    case Slider:
-                        AddControlWithListener("Slider",controlName);
-                        break;
-                    case Toggle:
-                        AddControlWithListener("Toggle",controlName);
-                        break;
-                    case Image:
-                        AddControlWithoutListener("Image",controlName);
-                        break;
-                    case Dropdown:
-                        AddControlWithListener("Dropdown",controlName);
-                        break;
-                    case InputField:
-                        AddControlWithListener("InputField",controlName);
-                        break;
-                    default:
-                        Debug.Log($"there is non-interpreted type on {controlName}");
-                        break;
-                }
-            }
-
+            // solution 1: find all UIBehaviour
+            // cons: cannot skip the multiply controls in one object
+            #region Solution 1
+            // UIBehaviour[] controls = obj.transform.GetComponentsInChildren<UIBehaviour>();
+            // foreach (var control in controls)
+            // {
+            //     string controlName = control.name;
+            //     //skip the default name object
+            //     if(defaultName.Contains(controlName)||controlName == obj.name)
+            //         continue;
+            //     
+            //     switch (control)
+            //     {
+            //         case Text:
+            //             AddControlWithoutListener("Text",controlName);
+            //             break;
+            //         case Button:
+            //             AddControlWithListener("Button",controlName);
+            //             break;
+            //         case Slider:
+            //             AddControlWithListener("Slider",controlName);
+            //             break;
+            //         case Toggle:
+            //             AddControlWithListener("Toggle",controlName);
+            //             break;
+            //         case Image:
+            //             AddControlWithoutListener("Image",controlName);
+            //             break;
+            //         case TMP_Dropdown:
+            //             AddControlWithListener("TMP_Dropdown",controlName);
+            //             break;
+            //         case TMP_InputField:
+            //             AddControlWithListener("TMP_InputField",controlName);
+            //             break;
+            //         case Dropdown:
+            //             AddControlWithListener("Dropdown",controlName);
+            //             break;
+            //         case InputField:
+            //             AddControlWithListener("InputField",controlName);
+            //             break;
+            //         default:
+            //             Debug.Log($"there is non-interpreted type on {controlName}");
+            //             break;
+            //     }
+            // }
+            #endregion
+            
+            // solution 2: binding controls according to type
+            GenerateControl<Button>();
+            GenerateControl<Slider>();
+            GenerateControl<Toggle>();
+            GenerateControl<InputField>();
+            GenerateControl<Dropdown>();
+            GenerateControl<TMP_Dropdown>();
+            GenerateControl<TMP_InputField>();
+            GenerateControl<ScrollRect>();
+            GenerateControl<Text>();
+            GenerateControl<Image>();
+            GenerateControl<TMP_Text>();
             sbBaseCode.Replace("*1*", sbBlock1.ToString());
             sbBaseCode.Replace("*2*", sbBlock2.ToString());
             sbBaseCode.Replace("*3*", sbBlock3.ToString());
@@ -135,17 +170,15 @@ namespace Editor.Practise
             return new List<string> { sbBaseCode.ToString(), sbDeprivedCode.ToString() };
         }
 
-        private void AddControlWithoutListener(string typeName, string controlNamePre)
+        private void AddControlWithoutListener(string typeName, string controlName,Transform control)
         {
-            string controlName = controlNamePre + typeName;
             sbBlock1.AppendLine($"\t\tpublic {typeName} {controlName};");
-            sbBlock2.AppendLine($"\t\t\t{controlName} = transform.Find(\"{controlName}\").GetComponent<{typeName}>();");
+            sbBlock2.AppendLine($"\t\t\t{controlName} = transform.Find(\"{GetControlPath(control)}\").GetComponent<{typeName}>();");
         }
 
-        private void AddControlWithListener(string typeName, string controlNamePre)
+        private void AddControlWithListener(string typeName, string controlName,Transform control)
         {
-            string controlName = controlNamePre + typeName;
-            AddControlWithoutListener(typeName, controlNamePre);
+            AddControlWithoutListener(typeName, controlName,control);
             if (typeName == "Button")
             {
                 sbBlock3.AppendLine($"\t\t\t{controlName}.onClick.AddListener(On{controlName}Listener);");
@@ -161,6 +194,16 @@ namespace Editor.Practise
                 sbBlock3.AppendLine($"\t\t\t{controlName}.onValueChanged.AddListener(On{controlName}Listener);");
                 sbBlock4.AppendLine($"\t\tprotected virtual void On{controlName}Listener(float val)");
             }
+            else if (typeName == "TMP_Dropdown")
+            {
+                sbBlock3.AppendLine($"\t\t\t{controlName}.onValueChanged.AddListener(On{controlName}Listener);");
+                sbBlock4.AppendLine($"\t\tprotected virtual void On{controlName}Listener(int val)");
+            }
+            else if (typeName == "TMP_InputField")
+            {
+                sbBlock3.AppendLine($"\t\t\t{controlName}.onSubmit.AddListener(On{controlName}Listener);");
+                sbBlock4.AppendLine($"\t\tprotected virtual void On{controlName}Listener(string content)");
+            }
             else if (typeName == "Dropdown")
             {
                 sbBlock3.AppendLine($"\t\t\t{controlName}.onValueChanged.AddListener(On{controlName}Listener);");
@@ -171,9 +214,100 @@ namespace Editor.Practise
                 sbBlock3.AppendLine($"\t\t\t{controlName}.onSubmit.AddListener(On{controlName}Listener);");
                 sbBlock4.AppendLine($"\t\tprotected virtual void On{controlName}Listener(string content)");
             }
+            else if (typeName == "ScrollRect")
+            {
+                sbBlock3.AppendLine($"\t\t\t{controlName}.onValueChanged.AddListener(On{controlName}Listener);");
+                sbBlock4.AppendLine($"\t\tprotected virtual void On{controlName}Listener(Vector2 loc)");
+            }
             sbBlock4.AppendLine("\t\t{}");
             sbBlock4.AppendLine();
+        }
+        
+        
+        private void GenerateControl<T>() where T : UIBehaviour
+        {
+            string typeName = typeof(T).Name;
+            T[] controls = obj.GetComponentsInChildren<T>();
+            foreach (var control in controls)
+            {
+                string controlName = control.name;
+                //1. skip the default name object
+                if (defaultName.Contains(controlName)||controlName == obj.name)
+                    continue;
+                
+                if (notebook.ContainsKey(controlName))
+                {
+                    //2. skip the object both same name and type
+                    if (notebook[controlName] == typeof(T))
+                    {
+                        EditorUtility.DisplayDialog("Contradict Objects",
+                            $"There are two controls with both same name and type:{controlName}", "sure");
+                        this.Close();
+                    }
+                    //3.skip the same name Object(with multiply controls)
+                    continue;
+                }
+                notebook.Add(controlName,typeof(T));
+                
+                switch (typeName)
+                {
+                    case "Text":
+                        AddControlWithoutListener("Text",controlName,control.transform);
+                        break;
+                    case "TMP_Text":
+                        AddControlWithoutListener("TMP_Text",controlName,control.transform);
+                        break;
+                    case "Button":
+                        AddControlWithListener("Button",controlName,control.transform);
+                        break;
+                    case "Slider":
+                        AddControlWithListener("Slider",controlName,control.transform);
+                        break;
+                    case "Toggle":
+                        AddControlWithListener("Toggle",controlName,control.transform);
+                        break;
+                    case "Image":
+                        AddControlWithoutListener("Image",controlName,control.transform);
+                        break;
+                    case "TMP_Dropdown":
+                        AddControlWithListener("TMP_Dropdown",controlName,control.transform);
+                        break;
+                    case "TMP_InputField":
+                        AddControlWithListener("TMP_InputField",controlName,control.transform);
+                        break;
+                    case "Dropdown":
+                        AddControlWithListener("Dropdown",controlName,control.transform);
+                        break;
+                    case "InputField":
+                        AddControlWithListener("InputField",controlName,control.transform);
+                        break;
+                    case "ScrollRect":
+                        AddControlWithListener("ScrollRect",controlName,control.transform);
+                        break;
+                    default:
+                        Debug.Log($"there is non-interpreted type on {controlName}");
+                        break;
+                }
+            }
+        }
 
+        //fix the nested problem(find can only apply on one nested layer)
+        private string GetControlPath(Transform control)
+        {
+            StringBuilder path = new StringBuilder(control.name);
+            while (control.parent != obj.transform)
+            {
+                path.Insert(0, control.parent.name + "/");
+                control = control.parent;
+            }
+            return path.ToString();
+            // string path = control.name;
+            // while (control.parent != obj.transform)
+            // {
+            //     path = control.parent.name + "/" + path;
+            // }
+            //
+            // return path;
         }
     }
 }

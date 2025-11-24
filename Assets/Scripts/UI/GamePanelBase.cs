@@ -8,14 +8,14 @@ namespace UI
     {
         //first Part: declare UI field
 		public Image GamePanelImage;
+		public Toggle tog1Toggle;
+		public Slider slider1Slider;
 		public Image btn1Image;
 		public Button btn1Button;
-		public Image btn2Image;
-		public Button btn2Button;
-		public Text txt3Text;
-		public Image dpl1Image;
-		public Image ArrowImage;
+		public Image dd1Image;
+		public TMP_Dropdown dd1TMP_Dropdown;
 		public Image if1Image;
+		public TMP_InputField if1TMP_InputField;
 
         
         
@@ -23,27 +23,39 @@ namespace UI
         {
             //second Part: binding UI field with its corresponding component
 			GamePanelImage = transform.Find("GamePanelImage").GetComponent<Image>();
+			tog1Toggle = transform.Find("tog1Toggle").GetComponent<Toggle>();
+			slider1Slider = transform.Find("slider1Slider").GetComponent<Slider>();
 			btn1Image = transform.Find("btn1Image").GetComponent<Image>();
 			btn1Button = transform.Find("btn1Button").GetComponent<Button>();
-			btn2Image = transform.Find("btn2Image").GetComponent<Image>();
-			btn2Button = transform.Find("btn2Button").GetComponent<Button>();
-			txt3Text = transform.Find("txt3Text").GetComponent<Text>();
-			dpl1Image = transform.Find("dpl1Image").GetComponent<Image>();
-			ArrowImage = transform.Find("ArrowImage").GetComponent<Image>();
+			dd1Image = transform.Find("dd1Image").GetComponent<Image>();
+			dd1TMP_Dropdown = transform.Find("dd1TMP_Dropdown").GetComponent<TMP_Dropdown>();
 			if1Image = transform.Find("if1Image").GetComponent<Image>();
+			if1TMP_InputField = transform.Find("if1TMP_InputField").GetComponent<TMP_InputField>();
 
             
             //third Part: add invoked event for specular UI control
+			tog1Toggle.onValueChanged.AddListener(Ontog1ToggleListener);
+			slider1Slider.onValueChanged.AddListener(Onslider1SliderListener);
 			btn1Button.onClick.AddListener(Onbtn1ButtonListener);
-			btn2Button.onClick.AddListener(Onbtn2ButtonListener);
+			dd1TMP_Dropdown.onValueChanged.AddListener(Ondd1TMP_DropdownListener);
+			if1TMP_InputField.onSubmit.AddListener(Onif1TMP_InputFieldListener);
 
         }
 
         //fourth Part: write invoked function
+		protected virtual void Ontog1ToggleListener(bool isOn)
+		{}
+
+		protected virtual void Onslider1SliderListener(float val)
+		{}
+
 		protected virtual void Onbtn1ButtonListener()
 		{}
 
-		protected virtual void Onbtn2ButtonListener()
+		protected virtual void Ondd1TMP_DropdownListener(int val)
+		{}
+
+		protected virtual void Onif1TMP_InputFieldListener(string content)
 		{}
 
 

@@ -10,11 +10,12 @@ namespace UI
         public Button btn1;
         public Button btn2;
         public Button btn3;
-        public TextMeshPro test1;
+        public TMP_Text test1;
         public Toggle tog1;
         public Slider slider1;
         public Dropdown dpl;
         public InputField inputField1;
+        private ScrollRect sr1;
         protected virtual void Start()
         {
             //second Part: binding UI field with its corresponding component
@@ -26,6 +27,7 @@ namespace UI
             slider1.onValueChanged.AddListener(OnSliderListener);
             dpl.onValueChanged.AddListener(OnDropDownListener);
             inputField1.onSubmit.AddListener(OnInputFieldListener);
+            sr1.onValueChanged.AddListener(OnScrollRectListener);
         }
 
         //fourth Part: write invoked function
@@ -52,5 +54,9 @@ namespace UI
             
         }
         
+        protected virtual void OnScrollRectListener(Vector2 loc)
+        {
+            
+        }
     }
 }
